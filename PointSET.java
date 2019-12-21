@@ -1,64 +1,133 @@
+import edu.princeton.cs.algs4.Point2D;
+import edu.princeton.cs.algs4.Queue;
+import edu.princeton.cs.algs4.RectHV;
+import edu.princeton.cs.algs4.SET;
+import java.util.Iterator;
+
 public class PointSET {
-    private SET<Point2D> set;
+    private final SET<Point2D> tree;
 
-    // construct an empty set of points
+    // Initialize and empty `PointSET data structure.
     public PointSET() {
-        set = new SET<Point2D>();
+        this.tree = new SET<Point2D>();
     }
 
-    // is the set empty?
+    // Return `true` or `false` if the `PointSET` is empty or not.
     public boolean isEmpty() {
-        return set.isEmpty();
+        return tree.isEmpty();
     }
 
-    // number of points in the set
+    // Return the number of points in the `PointSET`.
     public int size() {
-        return set.size();
+        return tree.size();
     }
 
-    // add the point p to the set (if it is not already in the set)
+    // Add the given point to the `PointSET` if the key is not already present
+    // in the set.
     public void insert(Point2D p) {
-        set.add(p);
+        if (p == null) {
+            throw new IllegalArgumentException("Argument cannot be null!");
+        }
+
+        tree.add(p);
     }
 
-    // does the set contain the point p?
+    // Returns `true` or `false` if the `PointSET` contains the given point.
     public boolean contains(Point2D p) {
-        return set.contains(p);
+        if (p == null) {
+            throw new IllegalArgumentException("Argument cannot be null!");
+        }
+
+        if (tree.isEmpty()) return false;
+
+        return tree.contains(p);
     }
 
-    // draw all of the points to standard draw
+    // Draw all points to standard draw.
     public void draw() {
-        for (Point2D p : set) {
+        Iterator<Point2D> i = tree.iterator();
+
+        while (i.hasNext()) {
+            Point2D p = i.next();
             p.draw();
         }
     }
 
-    // all points in the set that are inside the rectangle
+    // Returns an `Iterable<Point2D>` with all the points that are inside the
+    // rectangle (or on the boundary).
     public Iterable<Point2D> range(RectHV rect) {
-        Queue<Point2D> q = new Queue<Point2D>();
-
-        for (Point2D p : set) {
-            if (rect.contains(p)) {
-                q.enqueue(p);
-            }
+        if (rect == null) {
+            throw new IllegalArgumentException("Argument cannot be null!");
         }
 
-        return q;
+        Queue<Point2D> points = new Queue<Point2D>();
+        Iterator<Point2D> i = tree.iterator();
+
+        while (i.hasNext()) {
+            Point2D p = i.next();
+            if (rect.contains(p)) points.enqueue(p);
+        }
+
+        return points;
     }
 
-    // a nearest neighbor in the set to p; null if set is empty
+    // Returns the nearest neighbor in the set to point p and null if the set is
+    // empty.
     public Point2D nearest(Point2D p) {
-        Point2D nearestNeighbor = null;
-        double nearestDistance = Double.MAX_VALUE;
+        if (p == null) {
+            throw new IllegalArgumentException("Argument cannot be null!");
+        }
 
-        for (Point2D neighbor : set) {
-            double distance = p.distanceTo(neighbor);
-            if (distance < nearestDistance) {
-                nearestNeighbor = neighbor;
-                nearestDistance = distance;
+        if (tree.isEmpty()) return null;
+
+        Iterator<Point2D> i = tree.iterator();
+
+        Point2D currentPoint = i.next();
+        Point2D nearest = currentPoint;
+
+        double minimumDistance = p.distanceSquaredTo(currentPoint);
+
+        while (i.hasNext()) {
+            currentPoint = i.next();
+            double currentDistance = p.distanceSquaredTo(currentPoint);
+
+            if (currentDistance < minimumDistance) {
+                minimumDistance = currentDistance;
+                nearest = currentPoint;
             }
         }
 
-        return nearestNeighbor;
+        return nearest;
+    }
+
+    public static void main(String[] args) {
+        Point2D p0 = new Point2D(0, 0);
+        Point2D p1 = new Point2D(0.2, 0.2);
+        Point2D p2 = new Point2D(0.2, 0.4);
+        Point2D p3 = new Point2D(0.3, 0.2);
+        Point2D p4 = new Point2D(0.5, 0.5);
+        Point2D p5 = new Point2D(1.0, 1.0);
+
+        System.out.println(p1.distanceSquaredTo(p2));
+
+        PointSET pointSet = new PointSET();
+        pointSet.insert(p1);
+        pointSet.insert(p2);
+        pointSet.insert(p3);
+        pointSet.insert(p4);
+        pointSet.insert(p5);
+
+        System.out.println("Point set size: " + pointSet.size());
+        System.out.println("Contains p0?: " + pointSet.contains(p0));
+        System.out.println("Contains p3?: " + pointSet.contains(p3));
+
+        RectHV rect = new RectHV(0.1, 0.1, 0.4, 0.3);
+        Iterable<Point2D> range = pointSet.range(rect);
+
+        for (Point2D p : range) {
+            System.out.println(p);
+        }
+
+        System.out.println("Nearest point to p0?: " + pointSet.nearest(p0));
     }
 }
